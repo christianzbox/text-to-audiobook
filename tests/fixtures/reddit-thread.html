@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Reddit thread fixture</title>
+  </head>
+  <body>
+    <shreddit-post>
+      <h1 slot="title">What tiny software feature changed your day?</h1>
+      <div slot="text-body">
+        <p>I added keyboard shortcuts to a small internal tool and people started using it every morning.</p>
+      </div>
+    </shreddit-post>
+    <shreddit-comment author="useful_person" depth="0">
+      <div slot="comment">
+        <p>For me it was remembering the last filter I used. It made repeated reviews much less tedious.</p>
+      </div>
+      <span class="score">42 points</span>
+      <time>3 hours ago</time>
+    </shreddit-comment>
+    <shreddit-comment author="AutoModerator" depth="0">
+      <div slot="comment">
+        <p>Please remember to follow the subreddit rules.</p>
+      </div>
+    </shreddit-comment>
+    <shreddit-comment author="deleted_user" depth="1">
+      <div slot="comment">
+        <p>[deleted]</p>
+      </div>
+    </shreddit-comment>
+    <shreddit-comment author="nested_reader" depth="1">
+      <div slot="comment">
+        <blockquote>Parent comment quoted text.</blockquote>
+        <p>A nested comment should still keep its place after the top-level comment.</p>
+      </div>
+    </shreddit-comment>
+    <shreddit-comment author="second_top" depth="0">
+      <div slot="comment">
+        <p>A second top-level comment should not be part of the first selected subtree.</p>
+      </div>
+    </shreddit-comment>
+  </body>
+</html>

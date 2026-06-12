@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "PageVoice",
+  "description": "Turn meaningful web content into narrated audio.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "116",
+  "permissions": ["activeTab", "storage", "scripting", "sidePanel", "offscreen"],
+  "host_permissions": ["https://api.openai.com/*", "https://api.elevenlabs.io/*"],
+  "action": {
+    "default_title": "Open PageVoice"
+  },
+  "background": {
+    "service_worker": "background/index.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidepanel/index.html"
+  },
+  "options_page": "options/index.html",
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content/index.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-panel": {
+      "suggested_key": {
+        "default": "Alt+Shift+V"
+      },
+      "description": "Open PageVoice"
+    },
+    "pick-text": {
+      "suggested_key": {
+        "default": "Alt+Shift+P"
+      },
+      "description": "Pick text on the current page"
+    },
+    "play-pause": {
+      "suggested_key": {
+        "default": "Alt+Shift+Space"
+      },
+      "description": "Play or pause PageVoice"
+    },
+    "stop": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Stop PageVoice"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "PageVoice",
+  "description": "Turn meaningful web content into narrated audio.",
+  "version": "0.1.0",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": ["https://api.openai.com/*", "https://api.elevenlabs.io/*", "http://*/*", "https://*/*"],
+  "action": {
+    "default_title": "Open PageVoice",
+    "default_popup": "sidepanel/index.html"
+  },
+  "background": {
+    "service_worker": "background/index.js",
+    "type": "module"
+  },
+  "options_page": "options/index.html",
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content/index.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
