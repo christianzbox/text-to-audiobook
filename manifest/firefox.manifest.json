@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "PageVoice",
+  "description": "Turn meaningful web content into narrated audio.",
+  "version": "0.1.0",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": ["https://api.openai.com/*", "https://api.elevenlabs.io/*", "http://*/*", "https://*/*"],
+  "action": {
+    "default_title": "Open PageVoice",
+    "default_popup": "sidepanel/index.html"
+  },
+  "background": {
+    "service_worker": "background/index.js",
+    "type": "module"
+  },
+  "options_ui": {
+    "page": "options/index.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content/index.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-panel": {
+      "suggested_key": {
+        "default": "Alt+Shift+V"
+      },
+      "description": "Open PageVoice"
+    },
+    "pick-text": {
+      "suggested_key": {
+        "default": "Alt+Shift+P"
+      },
+      "description": "Pick text on the current page"
+    },
+    "play-pause": {
+      "suggested_key": {
+        "default": "Alt+Shift+Space"
+      },
+      "description": "Play or pause PageVoice"
+    },
+    "stop": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Stop PageVoice"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "pagevoice@example.local",
+      "strict_min_version": "121.0"
+    }
+  }
+}

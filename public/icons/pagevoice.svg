@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="PageVoice">
+  <rect width="128" height="128" rx="28" fill="#101828"/>
+  <path d="M34 26h40l20 20v56H34z" fill="#f9fafb"/>
+  <path d="M74 26v22h20" fill="#d0d5dd"/>
+  <path d="M44 56h28M44 70h40M44 84h32" stroke="#101828" stroke-width="6" stroke-linecap="round"/>
+  <path d="M86 70c7 5 7 17 0 22M96 60c14 13 14 34 0 47" fill="none" stroke="#20c997" stroke-width="7" stroke-linecap="round"/>
+</svg>
