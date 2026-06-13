@@ -34,4 +34,12 @@ describe("extractGenericDom", () => {
     expect(result.fullText).toContain("meaningful paragraph");
     expect(result.fullText).not.toContain("One Two Three");
   });
+
+  it("does not narrate hidden GitHub upload controls", () => {
+    const result = extractGenericDom(loadFixture("github-pr.html"));
+    expect(result.fullText).toContain("audio-reactive controls");
+    expect(result.fullText).not.toContain("We don't support that file type");
+    expect(result.fullText).not.toContain("Try again with a GIF");
+    expect(result.fullText).not.toContain("Attach files by dragging");
+  });
 });
