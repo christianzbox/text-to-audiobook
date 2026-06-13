@@ -28,15 +28,30 @@
     --accent-soft: #102820;
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
   }
+
+  .voice-source.cloud {
+    color: #84caff;
+    background: #102a56;
+  }
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   min-width: 320px;
+  width: 100%;
   background: var(--bg);
   color: var(--text);
 }
@@ -96,8 +111,18 @@ textarea {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
   padding: 14px;
+  padding-bottom: 22px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -208,6 +233,139 @@ textarea {
 
 .button-row.compact > button {
   flex: 0 1 auto;
+}
+
+.playback-section {
+  padding: 8px;
+}
+
+.playback-grid {
+  display: grid;
+  grid-template-columns: minmax(92px, 1fr) repeat(4, 40px);
+  gap: 6px;
+  align-items: center;
+}
+
+.playback-grid button {
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px;
+}
+
+.playback-play-button {
+  gap: 6px;
+}
+
+.playback-icon-button {
+  width: 40px;
+}
+
+.voice-panel {
+  gap: 9px;
+}
+
+.voice-panel-header,
+.speed-control,
+.voice-source {
+  display: flex;
+  align-items: center;
+}
+
+.voice-panel-header {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.voice-source {
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.voice-source.cloud {
+  color: #175cd3;
+  background: #eaf2ff;
+}
+
+.provider-segment {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.provider-option {
+  min-width: 0;
+  min-height: 34px;
+  gap: 5px;
+  padding: 6px 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.provider-option span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.provider-option.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.voice-control-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.voice-field {
+  min-width: 0;
+}
+
+.speed-control {
+  min-height: 36px;
+  gap: 8px;
+}
+
+.speed-control.full {
+  grid-column: 1 / -1;
+}
+
+.speed-control > span {
+  min-width: 58px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.speed-control input {
+  flex: 1;
+  min-width: 70px;
+  padding: 0;
+}
+
+.speed-control output {
+  min-width: 36px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  text-align: right;
+}
+
+.voice-warning {
+  margin: 0;
+  color: var(--warning);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .primary-button {
@@ -351,11 +509,37 @@ label > span {
 }
 
 @media (max-width: 380px) {
-  .field-grid {
-    grid-template-columns: 1fr;
+  .button-row > button {
+    flex-basis: 96px;
   }
 
-  .button-row > button {
+  .hero-controls .primary-button {
     flex-basis: 100%;
+  }
+}
+
+@media (max-height: 720px) {
+  .app-shell {
+    padding: 10px;
+    padding-bottom: 18px;
+    gap: 9px;
+  }
+
+  .app-header,
+  .panel-section {
+    box-shadow: none;
+  }
+
+  .panel-section {
+    padding: 10px;
+    gap: 9px;
+  }
+
+  .preview-textarea {
+    min-height: 120px;
+  }
+
+  .queue-list {
+    max-height: 150px;
   }
 }
