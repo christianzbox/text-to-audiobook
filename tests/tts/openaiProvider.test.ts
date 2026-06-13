@@ -27,7 +27,7 @@ describe("OpenAITTSProvider", () => {
 
   it("sends style instructions and cleaned text as the TTS input", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(new Blob(["audio"], { type: "audio/mpeg" }), {
+      new Response("audio", {
         status: 200,
         headers: { "Content-Type": "audio/mpeg" }
       })
