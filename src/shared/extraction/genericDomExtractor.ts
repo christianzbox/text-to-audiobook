@@ -31,8 +31,13 @@ const IGNORED_SELECTOR = [
   "[role='navigation']",
   "[role='menu']",
   "[role='menubar']",
-  "[role='dialog']"
+  "[role='dialog']",
+  "[role='tooltip']",
+  "[data-testid*='tooltip']",
+  "[data-testid*='popover']"
 ].join(",");
+
+const IGNORED_TEXT_HINTS = /(clipboard|copy|dropdown|file-attachment|flash|js-upload|menu|modal|notification|overlay|popover|toast|tooltip|upload)/i;
 
 export function extractGenericDom(document: Document, context = getDocumentContext(document)): ExtractionResult {
   const candidates = getReadableElementCandidates(document, context)
@@ -70,7 +75,7 @@ export function getReadableElementCandidates(document: Document, context = getDo
       continue;
     }
 
-    const rawText = element.textContent ?? "";
+    const rawText = extractReadableText(element);
     const text = cleanText(rawText);
     const words = estimateWordCount(text);
     if (words < 8) {
@@ -108,6 +113,59 @@ export function getReadableElementCandidates(document: Document, context = getDo
   }
 
   return candidates.sort((left, right) => right.score - left.score);
+}
+
+function extractReadableText(root: Element): string {
+  const ownerDocument = root.ownerDocument;
+  const walker = ownerDocument.createTreeWalker(root, 4, {
+    acceptNode(node) {
+      const text = node.textContent?.trim();
+      const parent = node.parentElement;
+      if (!text || !parent || shouldIgnoreTextNode(parent, root)) {
+        return 2;
+      }
+      return 1;
+    }
+  });
+  const parts: string[] = [];
+  let current = walker.nextNode();
+  while (current) {
+    const text = current.textContent?.trim();
+    if (text) {
+      parts.push(text);
+    }
+    current = walker.nextNode();
+  }
+  return parts.join("\n");
+}
+
+function shouldIgnoreTextNode(parent: Element, root: Element): boolean {
+  let current: Element | null = parent;
+  while (current && current !== root) {
+    if (isIgnoredTextContainer(current)) {
+      return true;
+    }
+    current = current.parentElement;
+  }
+  return false;
+}
+
+function isIgnoredTextContainer(element: Element): boolean {
+  if (element.matches(IGNORED_SELECTOR)) {
+    return true;
+  }
+  const style = element.ownerDocument.defaultView?.getComputedStyle(element);
+  if (style && (style.display === "none" || style.visibility === "hidden" || (style.opacity !== "" && Number(style.opacity) === 0))) {
+    return true;
+  }
+  const hints = [
+    element.id,
+    element.getAttribute("class"),
+    element.getAttribute("role"),
+    element.getAttribute("aria-label"),
+    element.getAttribute("data-testid")
+  ].filter(Boolean).join(" ");
+  return IGNORED_TEXT_HINTS.test(hints);
 }
 
 export function getDocumentContext(document: Document): ExtractionContext {
