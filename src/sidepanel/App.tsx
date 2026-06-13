@@ -201,18 +201,21 @@ export default function App() {
   );
 
   async function readPage(): Promise<void> {
-    await runExtraction({ type: "EXTRACT_PAGE", redditOptions });
+    await runExtraction({ type: "EXTRACT_PAGE", redditOptions }, true);
   }
 
   async function readSelectedText(): Promise<void> {
-    await runExtraction({ type: "EXTRACT_SELECTION" });
+    await runExtraction({ type: "EXTRACT_SELECTION" }, true);
   }
 
-  async function runExtraction(message: RuntimeMessage): Promise<void> {
+  async function runExtraction(message: RuntimeMessage, shouldPlay = false): Promise<void> {
     try {
       setStatusSafe("extracting", "Extracting readable text.");
       const result = await sendActiveTabMessage<ExtractionResult>(message);
-      applyExtraction(result);
+      const chunks = applyExtraction(result);
+      if (shouldPlay && chunks.length) {
+        await playQueue(0);
+      }
     } catch (error) {
       setStatusSafe("error", error instanceof Error ? error.message : "Extraction failed.");
     }
@@ -227,11 +230,12 @@ export default function App() {
     }
   }
 
-  function applyExtraction(result: ExtractionResult): void {
+  function applyExtraction(result: ExtractionResult): Chunk[] {
     setPreviewText(result.fullText);
     const chunks = chunkText(result.fullText);
     setQueueState(chunks);
     setStatusSafe(result.fullText ? "ready" : "error", result.warnings[0] ?? `${result.extractorName} extracted ${chunks.length} chunks.`);
+    return chunks;
   }
 
   function setQueueState(chunks: Chunk[]): void {
@@ -495,6 +499,15 @@ export default function App() {
           {statusDetail ? <small>{statusDetail}</small> : null}
         </div>
       </section>
+      <PlaybackControls
+        status={status}
+        canPlay={canPlay}
+        onPlay={() => void playQueue(currentIndexRef.current)}
+        onPauseResume={() => (status === "paused" ? resumePlayback() : pausePlayback())}
+        onStop={stopPlayback}
+        onNext={() => void nextChunk()}
+        onClear={clearQueue}
+      />
       <VoiceControls settings={settings} voices={voices} onChange={(patch) => void updateSettings(patch)} />
       {pageInfo?.isReddit ? <RedditControls settings={settings} onChange={(patch) => void updateSettings(patch)} /> : null}
       <ExtractedTextPreview
@@ -507,15 +520,6 @@ export default function App() {
           queuePreview();
           void playQueue(0);
         }}
-      />
-      <PlaybackControls
-        status={status}
-        canPlay={canPlay}
-        onPlay={() => void playQueue(currentIndexRef.current)}
-        onPauseResume={() => (status === "paused" ? resumePlayback() : pausePlayback())}
-        onStop={stopPlayback}
-        onNext={() => void nextChunk()}
-        onClear={clearQueue}
       />
       <QueuePanel chunks={queue} currentIndex={currentIndex} onSelect={selectQueueIndex} />
       <SettingsPanel settings={settings} onChange={(patch) => void updateSettings(patch)} />
