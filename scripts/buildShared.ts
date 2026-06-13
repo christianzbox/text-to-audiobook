@@ -100,8 +100,7 @@ export async function buildExtension(target: ExtensionTarget): Promise<void> {
       },
       rollupOptions: {
         output: {
-          entryFileNames: "content/index.js",
-          inlineDynamicImports: true
+          entryFileNames: "content/index.js"
         }
       }
     }
