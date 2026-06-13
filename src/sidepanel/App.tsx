@@ -479,6 +479,7 @@ export default function App() {
   return (
     <main className="app-shell">
       <Header pageInfo={pageInfo} provider={settings.provider} onRefresh={refreshPageInfo} />
+      <VoiceControls settings={settings} voices={voices} onChange={(patch) => void updateSettings(patch)} />
       <section className="panel-section hero-controls">
         <div className="button-row">
           <button type="button" className="primary-button" onClick={() => void readPage()}>
@@ -508,7 +509,6 @@ export default function App() {
         onNext={() => void nextChunk()}
         onClear={clearQueue}
       />
-      <VoiceControls settings={settings} voices={voices} onChange={(patch) => void updateSettings(patch)} />
       {pageInfo?.isReddit ? <RedditControls settings={settings} onChange={(patch) => void updateSettings(patch)} /> : null}
       <ExtractedTextPreview
         text={previewText}
