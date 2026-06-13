@@ -10,10 +10,11 @@ export class BrowserSpeechProvider implements TTSProvider {
   requiresApiKey = false;
 
   async listVoices(): Promise<Voice[]> {
-    if (!globalThis.speechSynthesis) {
+    const synthesis = globalThis.speechSynthesis;
+    if (!synthesis) {
       return [FALLBACK_BROWSER_VOICE];
     }
-    const voices = globalThis.speechSynthesis.getVoices();
+    const voices = await waitForBrowserVoices(synthesis);
     if (!voices.length) {
       return [FALLBACK_BROWSER_VOICE];
     }
@@ -68,4 +69,36 @@ export class BrowserSpeechProvider implements TTSProvider {
   stop(): void {
     globalThis.speechSynthesis?.cancel();
   }
+}
+
+function waitForBrowserVoices(synthesis: SpeechSynthesis): Promise<SpeechSynthesisVoice[]> {
+  const loaded = synthesis.getVoices();
+  if (loaded.length) {
+    return Promise.resolve(loaded);
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const previousHandler = synthesis.onvoiceschanged;
+
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      synthesis.removeEventListener?.("voiceschanged", finish);
+      if (synthesis.onvoiceschanged !== previousHandler) {
+        synthesis.onvoiceschanged = previousHandler;
+      }
+      resolve(synthesis.getVoices());
+    };
+
+    synthesis.addEventListener?.("voiceschanged", finish, { once: true });
+    synthesis.onvoiceschanged = (event) => {
+      previousHandler?.call(synthesis, event);
+      finish();
+    };
+    const timer = setTimeout(finish, 700);
+  });
 }
