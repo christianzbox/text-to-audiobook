@@ -219,6 +219,31 @@ textarea {
   flex: 0 1 auto;
 }
 
+.playback-section {
+  padding: 8px;
+}
+
+.playback-grid {
+  display: grid;
+  grid-template-columns: minmax(92px, 1fr) repeat(4, 40px);
+  gap: 6px;
+  align-items: center;
+}
+
+.playback-grid button {
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px;
+}
+
+.playback-play-button {
+  gap: 6px;
+}
+
+.playback-icon-button {
+  width: 40px;
+}
+
 .primary-button {
   border-color: var(--accent);
   background: var(--accent);
@@ -360,11 +385,11 @@ label > span {
 }
 
 @media (max-width: 380px) {
-  .field-grid {
-    grid-template-columns: 1fr;
+  .button-row > button {
+    flex-basis: 96px;
   }
 
-  .button-row > button {
+  .hero-controls .primary-button {
     flex-basis: 100%;
   }
 }
