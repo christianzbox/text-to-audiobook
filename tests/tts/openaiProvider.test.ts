@@ -90,4 +90,60 @@ describe("OpenAITTSProvider", () => {
       })
     ).rejects.toThrow("rate limited");
   });
+
+  it("exposes retry timing from OpenAI rate-limit responses", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: { message: "Too many requests" } }), {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": "2"
+        }
+      })
+    );
+
+    await expect(
+      provider.synthesize({
+        text: "Readable text only.",
+        voiceId: "alloy",
+        styleInstruction: "",
+        speed: 1,
+        format: "mp3",
+        providerSettings: {
+          openaiApiKey: "sk-test-secret"
+        }
+      })
+    ).rejects.toMatchObject({ retryAfterMs: 2000 });
+  });
+
+  it("distinguishes quota and billing errors from temporary rate limits", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            message: "You exceeded your current quota, please check your plan and billing details.",
+            type: "insufficient_quota",
+            code: "insufficient_quota"
+          }
+        }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json" }
+        }
+      )
+    );
+
+    await expect(
+      provider.synthesize({
+        text: "Readable text only.",
+        voiceId: "alloy",
+        styleInstruction: "",
+        speed: 1,
+        format: "mp3",
+        providerSettings: {
+          openaiApiKey: "sk-test-secret"
+        }
+      })
+    ).rejects.toThrow("quota or billing");
+  });
 });

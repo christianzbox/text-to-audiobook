@@ -8,6 +8,9 @@
   --accent: #087f5b;
   --accent-strong: #066347;
   --accent-soft: #dff8ee;
+  --primary-bg: #27675f;
+  --primary-bg-hover: #1f534d;
+  --primary-text: #ffffff;
   --danger: #b42318;
   --warning: #b54708;
   --shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
@@ -26,6 +29,9 @@
     --accent: #20c997;
     --accent-strong: #64e7bd;
     --accent-soft: #102820;
+    --primary-bg: #1f6f65;
+    --primary-bg-hover: #195950;
+    --primary-text: #f8fafc;
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
   }
 
@@ -369,14 +375,14 @@ textarea {
 }
 
 .primary-button {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: white;
+  border-color: var(--primary-bg);
+  background: var(--primary-bg);
+  color: var(--primary-text);
 }
 
 .primary-button:hover:not(:disabled) {
-  border-color: var(--accent-strong);
-  background: var(--accent-strong);
+  border-color: var(--primary-bg-hover);
+  background: var(--primary-bg-hover);
 }
 
 .field-grid {

@@ -36,12 +36,16 @@ export class OpenAITTSProvider implements TTSProvider {
     });
 
     if (!response.ok) {
-      const message = await readError(response);
+      const error = await readError(response);
+      const message = error.message;
       if (response.status === 401) {
         throw new Error("OpenAI rejected the API key. Check the key and try again.");
       }
       if (response.status === 429) {
-        throw new Error("OpenAI rate limited the request. Wait a moment and try again.");
+        if (isQuotaError(error)) {
+          throw new Error("OpenAI quota or billing limit was reached. Check API billing, usage, and project limits in your OpenAI dashboard.");
+        }
+        throw retryableError("OpenAI rate limited the request. Wait a moment and try again.", response.headers);
       }
       throw new Error(message || `OpenAI TTS failed with HTTP ${response.status}.`);
     }
@@ -58,11 +62,53 @@ export class OpenAITTSProvider implements TTSProvider {
   }
 }
 
-async function readError(response: Response): Promise<string> {
+interface OpenAIErrorDetails {
+  message: string;
+  type?: string;
+  code?: string;
+}
+
+export interface RetryableProviderError extends Error {
+  retryAfterMs?: number;
+}
+
+async function readError(response: Response): Promise<OpenAIErrorDetails> {
   try {
     const json = await response.json();
-    return json?.error?.message ?? "";
+    return {
+      message: json?.error?.message ?? "",
+      type: json?.error?.type,
+      code: json?.error?.code
+    };
   } catch {
-    return response.statusText;
+    return { message: response.statusText };
   }
+}
+
+function isQuotaError(error: OpenAIErrorDetails): boolean {
+  return [error.message, error.type, error.code].some((value) => /quota|billing|credit/i.test(String(value ?? "")));
+}
+
+function retryableError(message: string, headers: Headers): RetryableProviderError {
+  const error = new Error(message) as RetryableProviderError;
+  const retryAfterMs = parseRetryAfterMs(headers.get("retry-after"));
+  if (retryAfterMs !== undefined) {
+    error.retryAfterMs = retryAfterMs;
+  }
+  return error;
+}
+
+function parseRetryAfterMs(value: string | null): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const seconds = Number(value);
+  if (Number.isFinite(seconds)) {
+    return Math.max(0, seconds * 1000);
+  }
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) {
+    return undefined;
+  }
+  return Math.max(0, timestamp - Date.now());
 }
