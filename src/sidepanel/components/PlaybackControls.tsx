@@ -21,30 +21,26 @@ export function PlaybackControls({
   onClear
 }: PlaybackControlsProps) {
   const isPaused = status === "paused";
+  const pauseLabel = isPaused ? "Resume" : "Pause";
 
   return (
-    <section className="panel-section playback-section">
-      <div className="section-title">Playback</div>
-      <div className="button-row">
-        <button type="button" className="primary-button" disabled={!canPlay} onClick={onPlay}>
+    <section className="panel-section playback-section" aria-label="Playback controls">
+      <div className="playback-grid">
+        <button type="button" className="primary-button playback-play-button" disabled={!canPlay} onClick={onPlay}>
           <Play size={16} />
           Play
         </button>
-        <button type="button" disabled={!canPlay} onClick={onPauseResume}>
+        <button type="button" className="playback-icon-button" disabled={!canPlay} onClick={onPauseResume} aria-label={pauseLabel} title={pauseLabel}>
           {isPaused ? <Play size={16} /> : <Pause size={16} />}
-          {isPaused ? "Resume" : "Pause"}
         </button>
-        <button type="button" disabled={!canPlay} onClick={onStop}>
+        <button type="button" className="playback-icon-button" disabled={!canPlay} onClick={onStop} aria-label="Stop" title="Stop">
           <Square size={16} />
-          Stop
         </button>
-        <button type="button" disabled={!canPlay} onClick={onNext}>
+        <button type="button" className="playback-icon-button" disabled={!canPlay} onClick={onNext} aria-label="Next chunk" title="Next chunk">
           <SkipForward size={16} />
-          Next
         </button>
-        <button type="button" disabled={!canPlay} onClick={onClear}>
+        <button type="button" className="playback-icon-button" disabled={!canPlay} onClick={onClear} aria-label="Clear queue" title="Clear queue">
           <Trash2 size={16} />
-          Clear
         </button>
       </div>
     </section>

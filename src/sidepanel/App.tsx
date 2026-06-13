@@ -3,7 +3,7 @@ import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } fro
 import { browserApi } from "../shared/browser/browserApi";
 import { chunkText } from "../shared/extraction/chunker";
 import type { Chunk, ExtractionResult, RedditExtractionOptions } from "../shared/extraction/types";
-import type { AudioStatus, PageInfo, RuntimeMessage } from "../shared/messages/types";
+import type { AudioStatus, PageInfo, PendingPickerSelection, RuntimeMessage } from "../shared/messages/types";
 import { DEFAULT_SETTINGS } from "../shared/settings/defaults";
 import type { PageVoiceSettings, TTSProviderId } from "../shared/settings/schema";
 import { resolveStyleInstruction } from "../shared/tts/stylePresets";
@@ -84,6 +84,18 @@ export default function App() {
     }
   }, [sendActiveTabMessage, setStatusSafe]);
 
+  const applyPickerSelection = useEffectEvent((selection: PendingPickerSelection) => {
+    setPreviewText(selection.block.text);
+    const chunks = chunkText(selection.block.text);
+    if (selection.action === "queue") {
+      appendQueueState(chunks);
+      setStatusSafe("ready", "Picked text was added to the queue. Press Play to hear it.");
+    } else {
+      setQueueState(chunks);
+      setStatusSafe("ready", "Picked text is ready. Press Play to hear it.");
+    }
+  });
+
   useEffect(() => {
     let cancelled = false;
 
@@ -107,6 +119,15 @@ export default function App() {
           setStatusSafe("error", error instanceof Error ? error.message : "Could not read the active page.");
         }
       });
+
+    void browserApi.runtime
+      .sendMessage<PendingPickerSelection | null>({ type: "TAKE_PENDING_PICKER_SELECTION" })
+      .then((selection) => {
+        if (!cancelled && selection) {
+          applyPickerSelection(selection);
+        }
+      })
+      .catch(() => undefined);
 
     return () => {
       cancelled = true;
@@ -142,15 +163,13 @@ export default function App() {
 
   const handleRuntimeMessage = useEffectEvent((message: RuntimeMessage) => {
       if (message.type === "PICKER_SELECTED_BLOCK") {
-        setPreviewText(message.block.text);
-        const chunks = chunkText(message.block.text);
-        if (message.action === "queue") {
-          appendQueueState(chunks);
-          setStatusSafe("ready", "Picked text was added to the queue.");
-        } else {
-          setQueueState(chunks);
-          setStatusSafe("ready", "Picked text is ready.");
-        }
+        applyPickerSelection({
+          block: message.block,
+          action: message.action ?? "read"
+        });
+        window.setTimeout(() => {
+          void browserApi.runtime.sendMessage({ type: "TAKE_PENDING_PICKER_SELECTION" });
+        }, 100);
       } else if (message.type === "PLAY") {
         void playQueue();
       } else if (message.type === "PAUSE") {
@@ -182,18 +201,21 @@ export default function App() {
   );
 
   async function readPage(): Promise<void> {
-    await runExtraction({ type: "EXTRACT_PAGE", redditOptions });
+    await runExtraction({ type: "EXTRACT_PAGE", redditOptions }, true);
   }
 
   async function readSelectedText(): Promise<void> {
-    await runExtraction({ type: "EXTRACT_SELECTION" });
+    await runExtraction({ type: "EXTRACT_SELECTION" }, true);
   }
 
-  async function runExtraction(message: RuntimeMessage): Promise<void> {
+  async function runExtraction(message: RuntimeMessage, shouldPlay = false): Promise<void> {
     try {
       setStatusSafe("extracting", "Extracting readable text.");
       const result = await sendActiveTabMessage<ExtractionResult>(message);
-      applyExtraction(result);
+      const chunks = applyExtraction(result);
+      if (shouldPlay && chunks.length) {
+        await playQueue(0);
+      }
     } catch (error) {
       setStatusSafe("error", error instanceof Error ? error.message : "Extraction failed.");
     }
@@ -208,11 +230,12 @@ export default function App() {
     }
   }
 
-  function applyExtraction(result: ExtractionResult): void {
+  function applyExtraction(result: ExtractionResult): Chunk[] {
     setPreviewText(result.fullText);
     const chunks = chunkText(result.fullText);
     setQueueState(chunks);
     setStatusSafe(result.fullText ? "ready" : "error", result.warnings[0] ?? `${result.extractorName} extracted ${chunks.length} chunks.`);
+    return chunks;
   }
 
   function setQueueState(chunks: Chunk[]): void {
@@ -456,6 +479,7 @@ export default function App() {
   return (
     <main className="app-shell">
       <Header pageInfo={pageInfo} provider={settings.provider} onRefresh={refreshPageInfo} />
+      <VoiceControls settings={settings} voices={voices} onChange={(patch) => void updateSettings(patch)} />
       <section className="panel-section hero-controls">
         <div className="button-row">
           <button type="button" className="primary-button" onClick={() => void readPage()}>
@@ -476,7 +500,15 @@ export default function App() {
           {statusDetail ? <small>{statusDetail}</small> : null}
         </div>
       </section>
-      <VoiceControls settings={settings} voices={voices} onChange={(patch) => void updateSettings(patch)} />
+      <PlaybackControls
+        status={status}
+        canPlay={canPlay}
+        onPlay={() => void playQueue(currentIndexRef.current)}
+        onPauseResume={() => (status === "paused" ? resumePlayback() : pausePlayback())}
+        onStop={stopPlayback}
+        onNext={() => void nextChunk()}
+        onClear={clearQueue}
+      />
       {pageInfo?.isReddit ? <RedditControls settings={settings} onChange={(patch) => void updateSettings(patch)} /> : null}
       <ExtractedTextPreview
         text={previewText}
@@ -488,15 +520,6 @@ export default function App() {
           queuePreview();
           void playQueue(0);
         }}
-      />
-      <PlaybackControls
-        status={status}
-        canPlay={canPlay}
-        onPlay={() => void playQueue(currentIndexRef.current)}
-        onPauseResume={() => (status === "paused" ? resumePlayback() : pausePlayback())}
-        onStop={stopPlayback}
-        onNext={() => void nextChunk()}
-        onClear={clearQueue}
       />
       <QueuePanel chunks={queue} currentIndex={currentIndex} onSelect={selectQueueIndex} />
       <SettingsPanel settings={settings} onChange={(patch) => void updateSettings(patch)} />
