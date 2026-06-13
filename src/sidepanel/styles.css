@@ -34,9 +34,17 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
   min-width: 320px;
+  width: 100%;
+  overflow: hidden;
   background: var(--bg);
   color: var(--text);
 }
@@ -96,8 +104,12 @@ textarea {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 14px;
+  padding-bottom: 22px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -357,5 +369,31 @@ label > span {
 
   .button-row > button {
     flex-basis: 100%;
+  }
+}
+
+@media (max-height: 720px) {
+  .app-shell {
+    padding: 10px;
+    padding-bottom: 18px;
+    gap: 9px;
+  }
+
+  .app-header,
+  .panel-section {
+    box-shadow: none;
+  }
+
+  .panel-section {
+    padding: 10px;
+    gap: 9px;
+  }
+
+  .preview-textarea {
+    min-height: 120px;
+  }
+
+  .queue-list {
+    max-height: 150px;
   }
 }
