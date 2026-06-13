@@ -1,7 +1,10 @@
 const UI_LINE_PATTERNS = [
   /^(upvote|downvote|reply|share|save|report|award|more|menu|subscribe|log in|sign up|promoted|advertisement)$/i,
   /^(give award|hide|collapse|expand|view discussions?|sort by|continue this thread)$/i,
-  /^(permalink|embed|parent|context|full comments?)$/i
+  /^(permalink|embed|parent|context|full comments?)$/i,
+  /^we (?:do not|don't) support that file type\.?$/i,
+  /^try again with (?:a |an )?(?:gif|jpe?g|mov|mp4|png|svg|webm|csv|docx?|pdf|txt|zip)\b/i,
+  /^(?:attach|upload) files? by dragging/i
 ];
 
 const URL_PATTERN = /https?:\/\/[^\s)]+/gi;

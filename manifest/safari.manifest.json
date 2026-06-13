@@ -3,6 +3,9 @@
   "name": "PageVoice",
   "description": "Turn meaningful web content into narrated audio.",
   "version": "0.1.0",
+  "icons": {
+    "128": "icons/pagevoice.svg"
+  },
   "permissions": ["activeTab", "storage", "scripting"],
   "host_permissions": ["https://api.openai.com/*", "https://api.elevenlabs.io/*", "http://*/*", "https://*/*"],
   "action": {
@@ -10,8 +13,7 @@
     "default_popup": "sidepanel/index.html"
   },
   "background": {
-    "service_worker": "background/index.js",
-    "type": "module"
+    "service_worker": "background/index.js"
   },
   "options_page": "options/index.html",
   "content_scripts": [

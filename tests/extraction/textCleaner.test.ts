@@ -29,4 +29,15 @@ describe("cleanText", () => {
   it("removes duplicate chunks", () => {
     expect(cleanText("Same line.\nSame line.\nDifferent line.")).toBe("Same line.\n\nDifferent line.");
   });
+
+  it("removes GitHub upload error chrome", () => {
+    const text = cleanText(`
+      This pull request adds audio-reactive rendering controls.
+      We don't support that file type.
+      Try again with a GIF, JPEG, JPG, MOV, MP4, PNG, SVG, or WEBM.
+      Attach files by dragging & dropping, selecting or pasting them.
+    `);
+
+    expect(text).toBe("This pull request adds audio-reactive rendering controls.");
+  });
 });
