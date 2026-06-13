@@ -325,27 +325,13 @@ export default function App() {
     }
 
     setStatusSafe("generating", `Preparing chunk ${chunk.index + 1}.`);
-    const audioPromise = ensureAudioUrl(chunk, request);
-    prefetchChunk(chunk.index + 1);
-    const audioUrl = await audioPromise;
+    const audioUrl = await ensureAudioUrl(chunk, request);
 
     if (playTokenRef.current !== token) {
       return;
     }
     setStatusSafe("playing", `Playing chunk ${chunk.index + 1}.`);
     await playAudioUrl(audioUrl, token);
-  }
-
-  function prefetchChunk(index: number): void {
-    if (settings.provider === "browser-speech" || settings.provider === "local-kokoro") {
-      return;
-    }
-    const nextChunk = queueRef.current[index];
-    if (!nextChunk) {
-      return;
-    }
-    const request = buildRequest(nextChunk.text);
-    void ensureAudioUrl(nextChunk, request).catch(() => undefined);
   }
 
   function ensureAudioUrl(chunk: Chunk, request: TTSRequest): Promise<string> {
@@ -386,7 +372,7 @@ export default function App() {
         if (attempt === maxAttempts || !isRetryableProviderError(error)) {
           break;
         }
-        await delay(350 * 2 ** (attempt - 1));
+        await delay(getRetryDelayMs(error, attempt));
       }
     }
     const message = lastError instanceof Error ? lastError.message : "Unknown provider error.";
@@ -529,6 +515,16 @@ export default function App() {
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function getRetryDelayMs(error: unknown, attempt: number): number {
+  const retryAfterMs = typeof error === "object" && error !== null && "retryAfterMs" in error
+    ? Number((error as { retryAfterMs?: unknown }).retryAfterMs)
+    : NaN;
+  if (Number.isFinite(retryAfterMs) && retryAfterMs >= 0) {
+    return retryAfterMs;
+  }
+  return 750 * 2 ** (attempt - 1);
 }
 
 function isRetryableProviderError(error: unknown): boolean {
