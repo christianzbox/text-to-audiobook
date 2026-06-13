@@ -2,6 +2,7 @@ import { browserApi } from "../shared/browser/browserApi";
 import type { BrowserRuntimeSender } from "../shared/browser/types";
 import type { RuntimeMessage } from "../shared/messages/types";
 import { sanitizeSettings } from "../shared/settings/schema";
+import { setPendingPickerSelection, takePendingPickerSelection } from "./pickerSelectionStore";
 import { getSettings, updateSettings } from "./settingsStore";
 import { setAudioState } from "./ttsCoordinator";
 
@@ -11,6 +12,11 @@ export function registerMessageRouter(): void {
       case "OPEN_PANEL":
         await openPanelForSender(sender);
         return { ok: true };
+      case "PICKER_SELECTED_BLOCK":
+        setPendingPickerSelection(message);
+        return { ok: true };
+      case "TAKE_PENDING_PICKER_SELECTION":
+        return takePendingPickerSelection();
       case "SETTINGS_GET": {
         const settings = await getSettings();
         return sender.tab ? sanitizeSettings(settings) : settings;

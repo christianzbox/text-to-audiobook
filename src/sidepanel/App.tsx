@@ -3,7 +3,7 @@ import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } fro
 import { browserApi } from "../shared/browser/browserApi";
 import { chunkText } from "../shared/extraction/chunker";
 import type { Chunk, ExtractionResult, RedditExtractionOptions } from "../shared/extraction/types";
-import type { AudioStatus, PageInfo, RuntimeMessage } from "../shared/messages/types";
+import type { AudioStatus, PageInfo, PendingPickerSelection, RuntimeMessage } from "../shared/messages/types";
 import { DEFAULT_SETTINGS } from "../shared/settings/defaults";
 import type { PageVoiceSettings, TTSProviderId } from "../shared/settings/schema";
 import { resolveStyleInstruction } from "../shared/tts/stylePresets";
@@ -84,6 +84,18 @@ export default function App() {
     }
   }, [sendActiveTabMessage, setStatusSafe]);
 
+  const applyPickerSelection = useEffectEvent((selection: PendingPickerSelection) => {
+    setPreviewText(selection.block.text);
+    const chunks = chunkText(selection.block.text);
+    if (selection.action === "queue") {
+      appendQueueState(chunks);
+      setStatusSafe("ready", "Picked text was added to the queue. Press Play to hear it.");
+    } else {
+      setQueueState(chunks);
+      setStatusSafe("ready", "Picked text is ready. Press Play to hear it.");
+    }
+  });
+
   useEffect(() => {
     let cancelled = false;
 
@@ -107,6 +119,15 @@ export default function App() {
           setStatusSafe("error", error instanceof Error ? error.message : "Could not read the active page.");
         }
       });
+
+    void browserApi.runtime
+      .sendMessage<PendingPickerSelection | null>({ type: "TAKE_PENDING_PICKER_SELECTION" })
+      .then((selection) => {
+        if (!cancelled && selection) {
+          applyPickerSelection(selection);
+        }
+      })
+      .catch(() => undefined);
 
     return () => {
       cancelled = true;
@@ -142,15 +163,13 @@ export default function App() {
 
   const handleRuntimeMessage = useEffectEvent((message: RuntimeMessage) => {
       if (message.type === "PICKER_SELECTED_BLOCK") {
-        setPreviewText(message.block.text);
-        const chunks = chunkText(message.block.text);
-        if (message.action === "queue") {
-          appendQueueState(chunks);
-          setStatusSafe("ready", "Picked text was added to the queue.");
-        } else {
-          setQueueState(chunks);
-          setStatusSafe("ready", "Picked text is ready.");
-        }
+        applyPickerSelection({
+          block: message.block,
+          action: message.action ?? "read"
+        });
+        window.setTimeout(() => {
+          void browserApi.runtime.sendMessage({ type: "TAKE_PENDING_PICKER_SELECTION" });
+        }, 100);
       } else if (message.type === "PLAY") {
         void playQueue();
       } else if (message.type === "PAUSE") {
