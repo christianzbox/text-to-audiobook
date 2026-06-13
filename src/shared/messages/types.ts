@@ -10,6 +10,11 @@ export interface PageInfo {
 
 export type AudioStatus = "idle" | "extracting" | "ready" | "generating" | "playing" | "paused" | "error";
 
+export interface PendingPickerSelection {
+  block: ReadableBlock;
+  action: "read" | "queue";
+}
+
 export type RuntimeMessage =
   | { type: "OPEN_PANEL" }
   | { type: "GET_PAGE_INFO" }
@@ -17,6 +22,7 @@ export type RuntimeMessage =
   | { type: "START_PICKER" }
   | { type: "CANCEL_PICKER" }
   | { type: "PICKER_SELECTED_BLOCK"; block: ReadableBlock; action?: "read" | "queue" }
+  | { type: "TAKE_PENDING_PICKER_SELECTION" }
   | { type: "EXTRACT_PAGE"; redditOptions?: Partial<RedditExtractionOptions> }
   | { type: "EXTRACT_SELECTION" }
   | { type: "EXTRACTION_RESULT"; result: ExtractionResult }
@@ -38,6 +44,7 @@ export interface MessageResponseMap {
   GET_PAGE_INFO: PageInfo;
   START_PICKER: { ok: true };
   CANCEL_PICKER: { ok: true };
+  TAKE_PENDING_PICKER_SELECTION: PendingPickerSelection | null;
   EXTRACT_PAGE: ExtractionResult;
   EXTRACT_SELECTION: ExtractionResult;
   SETTINGS_GET: PageVoiceSettings | PublicPageVoiceSettings;
